@@ -18,6 +18,7 @@ db.exec(`
     nis TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
     class_name TEXT NOT NULL,
+    attendance_no INTEGER,
     active INTEGER NOT NULL DEFAULT 1
   );
   CREATE TABLE IF NOT EXISTS sessions (
@@ -56,6 +57,11 @@ if (!sessionColumns.some((column) => column.name === "period")) {
   db.exec("ALTER TABLE sessions ADD COLUMN period TEXT NOT NULL DEFAULT 'Pagi'");
 }
 
+const studentColumns = db.prepare("PRAGMA table_info(students)").all() as { name: string }[];
+if (!studentColumns.some((column) => column.name === "attendance_no")) {
+  db.exec("ALTER TABLE students ADD COLUMN attendance_no INTEGER");
+}
+
 db.exec(`
   CREATE INDEX IF NOT EXISTS idx_sessions_starts_at ON sessions(starts_at DESC);
   CREATE INDEX IF NOT EXISTS idx_attendance_session ON attendance(session_id);
@@ -64,12 +70,18 @@ db.exec(`
 
 const studentCount = db.prepare("SELECT COUNT(*) AS count FROM students").get() as { count: number };
 if (studentCount.count === 0) {
-  const insert = db.prepare("INSERT INTO students (nis, name, class_name) VALUES (?, ?, ?)");
+  const insert = db.prepare("INSERT INTO students (nis, name, class_name, attendance_no) VALUES (?, ?, ?, ?)");
   const seed = db.transaction(() => {
-    STUDENTS_9J.forEach(({ nis, name }) => insert.run(nis, name, CLASS_NAME));
+    STUDENTS_9J.forEach(({ nis, name, attendanceNo }) => insert.run(nis, name, CLASS_NAME, attendanceNo));
   });
   seed();
 }
+
+const updateAttendanceNo = db.prepare("UPDATE students SET attendance_no = ? WHERE nis = ?");
+const syncAttendanceNumbers = db.transaction(() => {
+  STUDENTS_9J.forEach(({ nis, attendanceNo }) => updateAttendanceNo.run(attendanceNo, nis));
+});
+syncAttendanceNumbers();
 
 const sessionCount = db.prepare("SELECT COUNT(*) AS count FROM sessions").get() as { count: number };
 if (sessionCount.count === 0) {

@@ -22,7 +22,7 @@ import { useEffect, useRef, useState } from "react";
 import { SCHOOL_NAME } from "@/data/students-9j";
 
 type LocationState = { latitude: number; longitude: number; accuracy: number } | null;
-type Student = { id: number; nis: string; name: string };
+type Student = { id: number; nis: string; name: string; attendanceNo: number };
 type Session = {
   code: string;
   subject: string;
@@ -261,12 +261,12 @@ export function StudentAttendance({ sessionCode }: { sessionCode: string }) {
             <UserRound size={19} />
             <select aria-label="Pilih nama siswa" value={studentId} onChange={(event) => chooseStudent(Number(event.target.value))} disabled={!sessionActive}>
               <option value={0}>Pilih nama lengkap...</option>
-              {students.map((student) => <option key={student.id} value={student.id}>{student.name} — {student.nis}</option>)}
+              {students.map((student) => <option key={student.id} value={student.id}>No. {String(student.attendanceNo).padStart(2, "0")} — {student.name}</option>)}
             </select>
             <ChevronDown size={18} />
           </div>
           {selectedStudent ? (
-            <div className="student-identity-confirm"><span>{initials(selectedStudent.name)}</span><div><small>PASTIKAN DATA INI BENAR</small><strong>{selectedStudent.name}</strong><p>NIS {selectedStudent.nis} • Kelas {session.className}</p></div><CheckCircle2 size={22} /></div>
+            <div className="student-identity-confirm"><span>{String(selectedStudent.attendanceNo).padStart(2, "0")}</span><div><small>PASTIKAN DATA INI BENAR</small><strong>{selectedStudent.name}</strong><p>No. Absen {String(selectedStudent.attendanceNo).padStart(2, "0")} • NIS {selectedStudent.nis} • Kelas {session.className}</p></div><CheckCircle2 size={22} /></div>
           ) : <p className="student-helper"><Info size={14} /> Jangan memilih nama teman. Foto akan diperiksa oleh guru.</p>}
         </section>
 

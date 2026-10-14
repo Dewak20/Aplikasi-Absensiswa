@@ -17,6 +17,8 @@ Aplikasi absensi sederhana untuk satu sekolah/guru. Guru membuat sesi dan membag
 - Riwayat sesi berdasarkan tanggal dan periode pagi/siang
 - Jadwal sesi otomatis menggunakan waktu WITA
 - Hapus record salah/tes beserta fotonya
+- Nomor absen 01–42 sesuai urutan daftar hadir kelas 9J
+- Daftar siswa yang belum absen untuk setiap sesi
 - Ekspor laporan CSV
 - SQLite dan penyimpanan foto lokal di VPS
 

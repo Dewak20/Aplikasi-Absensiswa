@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
     attendanceCount: item.attendance_count || 0, lateCount: item.late_count || 0,
   }));
   if (!session) return Response.json({ session: null, sessions: sessionList, students: [], records: [] });
-  const students = db.prepare("SELECT id, nis, name FROM students WHERE class_name = ? AND active = 1 ORDER BY name").all(session.class_name);
-  const records = db.prepare(`SELECT a.id, a.student_id AS studentId, s.name, s.nis,
+  const students = db.prepare("SELECT id, nis, name, attendance_no AS attendanceNo FROM students WHERE class_name = ? AND active = 1 ORDER BY attendance_no, name").all(session.class_name);
+  const records = db.prepare(`SELECT a.id, a.student_id AS studentId, s.name, s.nis, s.attendance_no AS attendanceNo,
     a.submitted_at AS submittedAt, a.status, a.accuracy, a.distance_m AS distanceM,
     a.latitude, a.longitude FROM attendance a JOIN students s ON s.id = a.student_id
     WHERE a.session_id = ? ORDER BY a.submitted_at DESC`).all(session.id);

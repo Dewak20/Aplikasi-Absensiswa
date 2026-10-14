@@ -45,4 +45,4 @@ export const STUDENTS_9J = [
   { nis: "11794", name: "Putu Arika Apriliya Prasetya" },
   { nis: "11795", name: "Vincent Abdillah Devata" },
   { nis: "11796", name: "Zaskya Rahayu" },
-] as const;
+].map((student, index) => ({ ...student, attendanceNo: index + 1 }));
