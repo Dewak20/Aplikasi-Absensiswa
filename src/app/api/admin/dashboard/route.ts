@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const sessionList = sessions.map((item) => ({
     code: item.code, subject: item.subject, className: item.class_name, period: item.period,
     startsAt: item.starts_at, endsAt: item.ends_at, active: Boolean(item.active),
-    state: !item.active ? "Ditutup" : Date.now() < Date.parse(item.starts_at) ? "Terjadwal" : Date.now() > Date.parse(item.ends_at) ? "Selesai" : "Aktif",
+    state: !item.active ? "Ditutup" : Date.now() < Date.parse(item.starts_at) ? "Terjadwal" : Date.now() > Date.parse(item.ends_at) ? "Terlambat" : "Aktif",
     attendanceCount: item.attendance_count || 0, lateCount: item.late_count || 0,
   }));
   if (!session) return Response.json({ session: null, sessions: sessionList, students: [], records: [] });
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     a.latitude, a.longitude FROM attendance a JOIN students s ON s.id = a.student_id
     WHERE a.session_id = ? ORDER BY a.submitted_at DESC`).all(session.id);
   return Response.json({
-    session: { code: session.code, subject: session.subject, className: session.class_name, period: session.period, teacher: session.teacher, startsAt: session.starts_at, lateAt: session.late_at, endsAt: session.ends_at, active: Boolean(session.active), state: !session.active ? "Ditutup" : Date.now() < Date.parse(session.starts_at) ? "Terjadwal" : Date.now() > Date.parse(session.ends_at) ? "Selesai" : "Aktif", radiusM: session.radius_m },
+    session: { code: session.code, subject: session.subject, className: session.class_name, period: session.period, teacher: session.teacher, startsAt: session.starts_at, lateAt: session.late_at, endsAt: session.ends_at, active: Boolean(session.active), state: !session.active ? "Ditutup" : Date.now() < Date.parse(session.starts_at) ? "Terjadwal" : Date.now() > Date.parse(session.ends_at) ? "Terlambat" : "Aktif", radiusM: session.radius_m },
     sessions: sessionList, students, records,
   });
 }

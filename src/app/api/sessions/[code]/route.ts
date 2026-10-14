@@ -7,7 +7,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ cod
   const students = db.prepare(`SELECT id, nis, name, attendance_no AS attendanceNo FROM students
     WHERE class_name = ? AND active = 1 ORDER BY attendance_no, name`).all(session.class_name);
   const now = Date.now();
-  const state = !session.active ? "closed" : now < Date.parse(session.starts_at) ? "upcoming" : now > Date.parse(session.ends_at) ? "expired" : "active";
+  // Setelah batas sesi berakhir, siswa tetap dapat mengirim absensi dengan
+  // status Terlambat. Guru masih dapat menutup sesi secara manual.
+  const state = !session.active ? "closed" : now < Date.parse(session.starts_at) ? "upcoming" : now > Date.parse(session.ends_at) ? "late" : "active";
   return Response.json({
     session: {
       code: session.code, subject: session.subject, className: session.class_name, period: session.period,

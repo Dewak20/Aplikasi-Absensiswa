@@ -33,7 +33,7 @@ type Session = {
   endsAt: string;
   radiusM: number;
   usesRadius: boolean;
-  state: "active" | "closed" | "expired" | "upcoming";
+  state: "active" | "late" | "closed" | "upcoming";
 };
 
 type Result = { submittedAt: string; status: string; studentName: string };
@@ -89,7 +89,7 @@ export function StudentAttendance({ sessionCode }: { sessionCode: string }) {
   }, [sessionCode]);
 
   useEffect(() => {
-    if (!session || session.state !== "active") return;
+    if (!session || !["active", "late"].includes(session.state)) return;
     const timer = window.setInterval(() => setSecondsLeft((value) => Math.max(0, value - 1)), 1000);
     return () => window.clearInterval(timer);
   }, [session]);
@@ -102,8 +102,9 @@ export function StudentAttendance({ sessionCode }: { sessionCode: string }) {
   }, [cameraActive]);
 
   const selectedStudent = students.find((student) => student.id === studentId);
-  const sessionActive = session?.state === "active" && secondsLeft > 0;
-  const canSubmit = Boolean(studentId && photo && location && sessionActive);
+  const sessionOpen = session?.state === "active" || session?.state === "late";
+  const sessionLate = session?.state === "late" || (session?.state === "active" && secondsLeft === 0);
+  const canSubmit = Boolean(studentId && photo && location && sessionOpen);
   const completedSteps = Number(Boolean(studentId)) + Number(Boolean(photo)) + Number(Boolean(location));
   const countdown = `${String(Math.floor(secondsLeft / 60)).padStart(2, "0")}:${String(secondsLeft % 60).padStart(2, "0")}`;
 
@@ -230,8 +231,8 @@ export function StudentAttendance({ sessionCode }: { sessionCode: string }) {
     <PortalFrame>
       <section className="student-mobile-hero">
         <div className="student-live-row">
-          <span className={sessionActive ? "student-live-badge" : "student-closed-badge"}><i /> {sessionActive ? "Sesi aktif" : "Sesi ditutup"}</span>
-          <span className="student-countdown"><Clock3 size={14} /> {sessionActive ? `Sisa ${countdown}` : "Waktu habis"}</span>
+          <span className={sessionOpen ? "student-live-badge" : "student-closed-badge"}><i /> {sessionLate ? "Absensi terlambat" : sessionOpen ? "Sesi aktif" : "Sesi ditutup"}</span>
+          <span className="student-countdown"><Clock3 size={14} /> {sessionLate ? "Dicatat terlambat" : sessionOpen ? `Sisa ${countdown}` : "Waktu habis"}</span>
         </div>
         <p className="student-kicker">ABSENSI KELAS {session.className}</p>
         <h1>{session.subject}</h1>
@@ -239,8 +240,11 @@ export function StudentAttendance({ sessionCode }: { sessionCode: string }) {
         <div className="student-hero-code"><span>Kode sesi</span><strong>{session.code}</strong></div>
       </section>
 
-      {!sessionActive && (
-        <section className="student-session-warning"><AlertCircle size={21} /><div><strong>Absensi tidak dapat dikirim</strong><p>{session.state === "upcoming" ? "Sesi ini belum dimulai. Tunggu arahan guru." : "Waktu absensi sudah berakhir. Hubungi guru jika kamu belum absen."}</p></div></section>
+      {!sessionOpen && (
+        <section className="student-session-warning"><AlertCircle size={21} /><div><strong>Absensi tidak dapat dikirim</strong><p>{session.state === "upcoming" ? "Sesi ini belum dimulai. Tunggu arahan guru." : "Sesi ini sudah ditutup oleh guru."}</p></div></section>
+      )}
+      {sessionLate && (
+        <section className="student-session-warning"><AlertCircle size={21} /><div><strong>Kamu masih dapat mengisi absensi</strong><p>Waktu sesi sudah berakhir. Absensi yang dikirim sekarang akan tercatat sebagai terlambat.</p></div></section>
       )}
 
       <section className="student-howto">
@@ -259,7 +263,7 @@ export function StudentAttendance({ sessionCode }: { sessionCode: string }) {
           <FlowHeading number={1} title="Pilih nama kamu" description="Cari namamu pada daftar siswa kelas 9J." done={Boolean(studentId)} />
           <div className="student-select-wrap">
             <UserRound size={19} />
-            <select aria-label="Pilih nama siswa" value={studentId} onChange={(event) => chooseStudent(Number(event.target.value))} disabled={!sessionActive}>
+            <select aria-label="Pilih nama siswa" value={studentId} onChange={(event) => chooseStudent(Number(event.target.value))} disabled={!sessionOpen}>
               <option value={0}>Pilih nama lengkap...</option>
               {students.map((student) => <option key={student.id} value={student.id}>No. {String(student.attendanceNo).padStart(2, "0")} — {student.name}</option>)}
             </select>

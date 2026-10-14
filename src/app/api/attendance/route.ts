@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const session = db.prepare("SELECT * FROM sessions WHERE code = ?").get(body.code.toUpperCase()) as SessionRow | undefined;
   if (!session) return Response.json({ error: "Sesi tidak ditemukan." }, { status: 404 });
   const now = new Date();
-  if (!session.active || now < new Date(session.starts_at) || now > new Date(session.ends_at)) {
+  if (!session.active || now < new Date(session.starts_at)) {
     return Response.json({ error: "Sesi absensi tidak sedang aktif." }, { status: 400 });
   }
   const student = db.prepare("SELECT id, name FROM students WHERE id = ? AND class_name = ? AND active = 1").get(body.studentId, session.class_name) as { id: number; name: string } | undefined;
