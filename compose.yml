@@ -1,0 +1,31 @@
+services:
+  hadirin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hadirin
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      PORT: 20280
+      DATA_DIR: /app/data
+    ports:
+      - "127.0.0.1:20280:20280"
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:20280/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
