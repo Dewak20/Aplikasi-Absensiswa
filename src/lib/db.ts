@@ -9,6 +9,8 @@ fs.mkdirSync(dataDir, { recursive: true });
 const db = new Database(path.join(dataDir, "hadirin.db"));
 db.pragma("journal_mode = WAL");
 db.pragma("foreign_keys = ON");
+db.pragma("synchronous = NORMAL");
+db.pragma("busy_timeout = 10000");
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS students (
@@ -49,6 +51,17 @@ db.exec(`
   );
 `);
 
+const sessionColumns = db.prepare("PRAGMA table_info(sessions)").all() as { name: string }[];
+if (!sessionColumns.some((column) => column.name === "period")) {
+  db.exec("ALTER TABLE sessions ADD COLUMN period TEXT NOT NULL DEFAULT 'Pagi'");
+}
+
+db.exec(`
+  CREATE INDEX IF NOT EXISTS idx_sessions_starts_at ON sessions(starts_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_attendance_session ON attendance(session_id);
+  CREATE INDEX IF NOT EXISTS idx_attendance_submitted ON attendance(submitted_at DESC);
+`);
+
 const studentCount = db.prepare("SELECT COUNT(*) AS count FROM students").get() as { count: number };
 if (studentCount.count === 0) {
   const insert = db.prepare("INSERT INTO students (nis, name, class_name) VALUES (?, ?, ?)");
@@ -71,7 +84,7 @@ if (sessionCount.count === 0) {
 
 export type SessionRow = {
   id: number; code: string; subject: string; class_name: string; teacher: string;
-  starts_at: string; late_at: string; ends_at: string; latitude: number | null;
+  starts_at: string; late_at: string; ends_at: string; latitude: number | null; period: string;
   longitude: number | null; radius_m: number; active: number; created_at: string;
 };
 

@@ -36,10 +36,17 @@ export async function POST(request: Request) {
   let status = now > new Date(session.late_at) ? "Terlambat" : "Hadir";
   if (distance !== null && distance > session.radius_m) status = "Di luar area";
   const filename = `${session.id}-${student.id}-${crypto.randomUUID()}.jpg`;
-  fs.writeFileSync(path.join(getUploadDir(), filename), image);
-  db.prepare(`INSERT INTO attendance
-    (session_id, student_id, submitted_at, status, latitude, longitude, accuracy, distance_m, photo_file)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-    .run(session.id, student.id, now.toISOString(), status, body.latitude, body.longitude, body.accuracy, distance, filename);
+  const photoPath = path.join(getUploadDir(), filename);
+  fs.writeFileSync(photoPath, image);
+  try {
+    db.prepare(`INSERT INTO attendance
+      (session_id, student_id, submitted_at, status, latitude, longitude, accuracy, distance_m, photo_file)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      .run(session.id, student.id, now.toISOString(), status, body.latitude, body.longitude, body.accuracy, distance, filename);
+  } catch (error) {
+    if (fs.existsSync(photoPath)) fs.unlinkSync(photoPath);
+    if (error instanceof Error && error.message.includes("UNIQUE")) return Response.json({ error: "Nama ini sudah melakukan absensi pada sesi ini." }, { status: 409 });
+    throw error;
+  }
   return Response.json({ ok: true, submittedAt: now.toISOString(), status, studentName: student.name });
 }

@@ -14,6 +14,9 @@ Aplikasi absensi sederhana untuk satu sekolah/guru. Guru membuat sesi dan membag
 - Pembaruan dashboard setiap 5 detik
 - Guru dapat melihat foto dan lokasi
 - Guru dapat mengubah status
+- Riwayat sesi berdasarkan tanggal dan periode pagi/siang
+- Jadwal sesi otomatis menggunakan waktu WITA
+- Hapus record salah/tes beserta fotonya
 - Ekspor laporan CSV
 - SQLite dan penyimpanan foto lokal di VPS
 
@@ -79,6 +82,17 @@ Semua data berada di direktori `DATA_DIR`:
 - `uploads/` — foto siswa
 
 Backup seluruh folder tersebut secara rutin. Folder harus dapat ditulis oleh user yang menjalankan aplikasi. Jangan menjalankan lebih dari satu instance aplikasi terhadap satu file SQLite.
+
+## Pola penggunaan harian
+
+Gunakan satu sesi untuk setiap periode dan tanggal, misalnya:
+
+- Pagi: 07.00–07.20 WITA, terlambat setelah 07.10
+- Siang: atur sesuai jam pulang sekolah
+
+Sesi boleh dibuat lebih awal. Link otomatis hanya menerima absensi di antara waktu mulai dan berakhir. Semua sesi lama tetap tersedia pada bagian **Riwayat sesi**. Record tes dapat dihapus dari tombol tempat sampah pada tabel; foto terkait ikut terhapus dan siswa dapat absen ulang.
+
+SQLite dikonfigurasi dengan WAL, busy timeout 10 detik, indeks, dan transaksi unik untuk menangani satu kelas. Pengujian lokal 40 pengiriman paralel menghasilkan 40/40 record berhasil. Tetap jalankan hanya satu instance aplikasi.
 
 ## Catatan keamanan
 

@@ -10,7 +10,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ cod
   const state = !session.active ? "closed" : now < Date.parse(session.starts_at) ? "upcoming" : now > Date.parse(session.ends_at) ? "expired" : "active";
   return Response.json({
     session: {
-      code: session.code, subject: session.subject, className: session.class_name,
+      code: session.code, subject: session.subject, className: session.class_name, period: session.period,
       teacher: session.teacher, startsAt: session.starts_at, lateAt: session.late_at,
       endsAt: session.ends_at, radiusM: session.radius_m, usesRadius: session.latitude !== null,
       state,
